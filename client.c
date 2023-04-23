@@ -17,7 +17,6 @@
 
 int main(){
 	printf("Client is up and running.\n");
-
 	printf("Please enter the usernames to check schedule availability:\n");
 	char namestr[MAXBUFLEN];
 	int sockfd;
@@ -29,10 +28,11 @@ int main(){
 
 	getaddrinfo(LOCALHOST, SERVERPORT, &hints, &res);
 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); // get fd
-	// establish connection
-   connect(sockfd, res->ai_addr, res->ai_addrlen);
 	while(fgets(namestr, sizeof(namestr), stdin)){ // keep receiving the query request from the client
+	   sockfd = socket(AF_INET, SOCK_STREAM, 0); // get fd
+      // establish connection
+      connect(sockfd, res->ai_addr, res->ai_addrlen);
+      // send the input usernames to the main server
 		send(sockfd, namestr, MAXBUFLEN-1, 0);
 		char port[10];
 		recv(sockfd, port, 9, 0); // receive the port number that the client is using to communicate with serverM
@@ -66,11 +66,11 @@ int main(){
 	      i++;
 		}
 
-		/*
+      /*
 		for(int i = 0; i < 3; i++){
 		   printf("group[%d] is %s\n", i, group[i]);
 		}
-		*/
+      */
 
 		if(strlen(group[0]) != 0)
 		   printf("Client received the reply from Main Server using TCP over port %s:\n%s do not exist.\n", port, group[0]);
@@ -83,10 +83,8 @@ int main(){
 		printf("-----Start a new request-----\n");
 		printf("Please enter the usernames to check schedule availability:\n");
 
+		close(sockfd);
 	}
-
-
-
 
 	return 0;
 }

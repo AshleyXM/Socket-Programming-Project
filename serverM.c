@@ -113,9 +113,11 @@ int main(){
 
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len = sizeof(client_addr);
-	childsockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
+	
 
 	while(1) {
+	   // TCP connection can only be used one time, which is quite different from UDP
+	   childsockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
 		char clientstr[MAXBUFLEN];
 		// printf("client port is %d\n", ntohs(client_addr.sin_port));
 		// lsof -i | grep 38582  -> check the process of specified port number
@@ -223,22 +225,27 @@ int main(){
 		strcpy(finalintersection, findIntersection(recvslots, src_num));
 		printf("Found the intersection between the results from server A and B:\n%s.\n", formatTime(finalintersection));
 
-		if(strlen(inA) != 0)
+		if(strlen(inA) != 0) {
 			strcat(info2client, inA);
-		if(strlen(inB) != 0) {
 			strcat(info2client, ", ");
+		}
+		if(strlen(inB) != 0) {	
 			strcat(info2client, inB);
 		}
 		strcat(info2client, ";");
 		strcat(info2client, formatTime(finalintersection));
 
-		printf("info2client is %s\n", info2client);
+		// printf("info2client is %s\n", info2client);
 
 		// send the result to the client
 		send(childsockfd, info2client, MAXBUFLEN-1, 0);
 		printf("Main Server sent the result to the client.\n");
+
+		close(childsockfd);
 	} // end while
 
+   close(tcpsockfd);
+   close(udpsockfd);
 	return 0;
 }
 
@@ -264,6 +271,8 @@ int nameInServer(char c, char* name){ // c == 'A'/'B'
 /* get the intersection of time slots of given usernames */
 /* the names in parameter username are separated with comma */
 char *findIntersection(char* slots, int src_num) {
+   if(src_num == 0) // all users do not exist
+      return "";
    int time[101];
    memset(time, 0, sizeof(time)); // initiate the time array
    int timeslots[100];
