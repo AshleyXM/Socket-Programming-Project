@@ -20,6 +20,7 @@
 #define LOCALHOST "127.0.0.1"
 #define BACKLOG 3 // how many pending connections queue will hold
 #define MAXBUFLEN 800
+#define MAXSLOTLEN 100
 
 char usersA[200][25], usersB[200][25]; // will not change in a new request
 int sizeA = 0; // the number of users in serverA, will not change in a new request
@@ -27,11 +28,18 @@ int sizeB = 0; // the number of users in serverB, will not change in a new reque
 
 /* judge whether the name is in serverA or serverB */
 int nameInServer(char c, char* name);
-/* get the intersection of time slots of given usernames */
-/* the names in parameter username are separated with comma */
-char *findIntersection(char* slots, int src_num);
-/* timestr: 2,3,5,7  return value: [[2,3],[5,7]]*/
-char *formatTime(char* timestr);
+/*
+   func: convert the time slots received from Server A/B into an int array
+   recvdata: [[1,3],[5,7],[10,20]]
+   return value: 011101110011111111111000...
+*/
+int *convertTime(char *recvdata);
+/*
+   parameter time is the final time slots, like 001033330201...(length equals MAXSLOTLEN)
+   parameter src_num is the number of users used to calculate the intersection
+   return value: [[4,7],..]
+*/
+char *displayIntersection(int time[MAXSLOTLEN], int src_num);
 
 int main(){
 	struct addrinfo hints, *resA, *resB; // resA and resB can be used for sending msg
@@ -169,7 +177,7 @@ int main(){
 		char info2client[MAXBUFLEN] = {0}; // info to send to the client
 		char recvfromA[MAXBUFLEN] = {0};
 		char recvfromB[MAXBUFLEN] = {0};
-		char recvslots[MAXBUFLEN] = {0}; // recvfromA + recvfromB
+
 		struct sockaddr_in src_addrA, src_addrB;
 		socklen_t addr_lenA = sizeof(src_addrA);
 		socklen_t addr_lenB = sizeof(src_addrB);
@@ -179,61 +187,85 @@ int main(){
 			printf("%s do not exist. Send a reply to the client.\n", notexist);
 			strcat(info2client, notexist); // notexist is not empty
 		}
-		strcat(info2client, ";"); // add a semocolon to separate the three groups
-
-		int src_num = 0; // the number of data src
-		char tempA[MAXBUFLEN];
-		char tempB[MAXBUFLEN];
+		strcat(info2client, ";"); // add a semicolon to separate the three groups
 
 		if(strlen(inA) != 0) {
-			src_num++;
 			printf("Found %s at Server A. Send to Server A.\n", inA);
 			// query serverA, inA form: aa, bb, cc, dd
 			sendto(udpsockfd, inA, MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
 			// receive response from serverA
 			recvfrom(udpsockfd, recvfromA, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrA, &addr_lenA);
 			// printf("recvstr from A is %s\n", recvfromA);
-			// catenate strings from A to recvslots
-			strcat(recvslots, recvfromA); // recvfromA is not empty
-
-			strcpy(tempA, formatTime(recvfromA));
 		}
 
-		strcat(recvslots, ",");
-
 		if(strlen(inB) != 0) {
-			src_num++;
 			printf("Found %s at Server B. Send to Server B.\n", inB);
 			// query serverB
 			sendto(udpsockfd, inB, MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
 			// receive response from serverB
 			recvfrom(udpsockfd, recvfromB, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrB, &addr_lenB);
 			// printf("recvstr from B is %s\n", recvfromB);
-			// catenate strings from B to recvslots
-			strcat(recvslots, recvfromB); // recvfromB is not empty
-			strcpy(tempB, formatTime(recvfromB));
 		}
 
 		if(strlen(inA) != 0)
-			printf("Main Server received from server A the intersection result using UDP over port %d:\n%s.\n", UDPPORT, tempA);
+			printf("Main Server received from server A the intersection result using UDP over port %d:\n%s.\n", UDPPORT, recvfromA);
 		if(strlen(inB) != 0)
-			printf("Main Server received from server B the intersection result using UDP over port %d:\n%s.\n", UDPPORT, tempB);
+			printf("Main Server received from server B the intersection result using UDP over port %d:\n%s.\n", UDPPORT, recvfromB);
 
-		// printf("recvslots is %s\n", recvslots);
+      int intersectionA[MAXSLOTLEN];
+      int intersectionB[MAXSLOTLEN];  
+		memcpy(intersectionA, convertTime(recvfromA), MAXSLOTLEN * sizeof(int));
+		memcpy(intersectionB, convertTime(recvfromB), MAXSLOTLEN * sizeof(int));
+		
+		/*
+      printf("intersectionA is ");
+      for(int i = 0; i < MAXSLOTLEN; i++) {
+         printf("%d ", intersectionA[i]);
+      }
+      printf("\n");
+      
+      printf("intersectionB is ");
+      for(int i = 0; i < MAXSLOTLEN; i++) {
+         printf("%d ", intersectionB[i]);
+      }
+      printf("\n");
+      */
 
-		char finalintersection[MAXBUFLEN] = {0};
-		strcpy(finalintersection, findIntersection(recvslots, src_num));
-		printf("Found the intersection between the results from server A and B:\n%s.\n", formatTime(finalintersection));
+		int intersection[MAXSLOTLEN];
+		memset(intersection, 0, sizeof(intersection));
+
+      for(int i = 0; i < MAXSLOTLEN; i++) {
+         intersection[i] = intersectionA[i] + intersectionB[i];
+      }
+
+      int srcNum = 0; // data from ServerA or ServerB or both or none
+      if(strlen(inA) != 0 && strlen(inB) != 0)
+         srcNum = 2;
+      else if(strlen(inA) == 0 || strlen(inB) == 0)
+         srcNum = 1;
+      else // all names do not exist in serverA or serverB
+         srcNum = -1;
+      printf("Found the intersection between the results from server A and B:\n%s.\n", displayIntersection(intersection, srcNum));
 
 		if(strlen(inA) != 0) {
-			strcat(info2client, inA);
-			strcat(info2client, ", ");
+			strcat(info2client, inA);			
 		}
-		if(strlen(inB) != 0) {	
+		if(strlen(inB) != 0) {
+		   if(strlen(inA) != 0) // some names come from serverA
+		      strcat(info2client, ", ");
 			strcat(info2client, inB);
 		}
 		strcat(info2client, ";");
-		strcat(info2client, formatTime(finalintersection));
+
+		char intersectionstr[MAXBUFLEN];
+		char temp[5];
+		memset(intersectionstr, 0, sizeof(intersectionstr));
+		for(int i = 0; i < MAXSLOTLEN; i++) {
+		   sprintf(temp, "%d", intersection[i]);
+		   strcat(intersectionstr, temp);
+		}
+		// printf("intersectionstr is %s\n", intersectionstr);
+		strcat(info2client, displayIntersection(intersection, srcNum));
 
 		// printf("info2client is %s\n", info2client);
 
@@ -268,82 +300,103 @@ int nameInServer(char c, char* name){ // c == 'A'/'B'
    }
 }
 
-/* get the intersection of time slots of given usernames */
-/* the names in parameter username are separated with comma */
-char *findIntersection(char* slots, int src_num) {
-   if(src_num == 0) // all users do not exist
-      return "";
-   int time[101];
-   memset(time, 0, sizeof(time)); // initiate the time array
-   int timeslots[100];
-   int count = 0; // the number of time in parameter slots
-   char slots_copy[MAXBUFLEN];
-   strcpy(slots_copy, slots);
-   char* token = strtok(slots_copy, ",");
+/*
+   func: convert the time slots received from A/B into a int array
+   recvdata: [[1,3],[5,7],[10,20]]
+   return value: 011101110011111111111000...
+*/
+int *convertTime(char *recvdata) {
+   int *converted = malloc(sizeof(int) * MAXSLOTLEN); // the converted data, which is the final result
+   memset(converted, 0, sizeof(converted));
+   int slots[50];
+   int position = 0; // the number of numbers in recvdata
+   char recvdata_copy[MAXBUFLEN];
+   strcpy(recvdata_copy, recvdata);
+   char *token = strtok(recvdata_copy, ",[]");
    while(token != NULL) {
-      // printf("token is %s\n",token);
-      timeslots[count] = atoi(token);
-      token = strtok(NULL, ",");
-      count++; // increment the number of the current users
+      slots[position] = atoi(token);
+      position++;
+      token = strtok(NULL, ",[]");
    }
 
-   for(int i = 0; i < count; i+=2) {
-      for(int j = timeslots[i]; j <= timeslots[i+1]; j++) {
-         time[j]++;
+   /*
+   // print the array slots
+   printf("slots in func convertTime: ");
+   for(int i = 0; i < position; i++)
+      printf("%d ", slots[i]);
+   printf("\n");
+   */
+   for(int i = 0; i < position; i += 2) {
+      for(int j = slots[i]; j <= slots[i+1]-1; j++) {
+         converted[j] = 1;
       }
    }
 
    /*
-   for(int i = 0; i < 101;i++){
-      printf("%d",time[i]);
-   }
-
+   // print the array time
+   printf("converted in func convertTime: ");
+   for(int i = 0; i < MAXSLOTLEN; i++)
+      printf("%d ", converted[i]);
    printf("\n");
    */
-   static char intersection[MAXBUFLEN] = {0};
+   
+   return converted;
+}
+
+/*
+   parameter time is the final time slots, like 001033330201...(length equals MAXSLOTLEN)
+   parameter src_num is the number of users used to calculate the intersection
+   return value: [[4,7],..]
+*/
+char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
+   static char intersection[MAXBUFLEN];
    memset(intersection, 0, sizeof(intersection));
    char str[5]; // used to convert int to string
-   // intersection is time[i] == count
+   // intersection is time[i] == src_num
    // handle the first element specifically
    if(time[0] == src_num) {
          strcat(intersection, "0");
          strcat(intersection, ","); // separate the time slots with comma
    }
-   for(int i = 1; i < 100; i++) {
-      if(time[i-1] != src_num && time[i] == src_num && time[i+1] == src_num) { // a start
+   for(int i = 1; i < MAXSLOTLEN-1; i++) {
+      if(time[i-1] != src_num && time[i] == src_num && time[i+1] != src_num) { // a single number
+         sprintf(str, "%d", i); // convert int i into string and store it into var str
+         strcat(intersection, str);
+         strcat(intersection, ",");
+         sprintf(str, "%d", i+1); // convert int i into string and store it into var str
+         strcat(intersection, str);
+         strcat(intersection, ",");
+      }
+      else if(time[i-1] != src_num && time[i] == src_num) { // a start
          // printf("start is %d\n", i);
          sprintf(str, "%d", i); // convert int i into string and store it into var str
          strcat(intersection, str);
          strcat(intersection, ","); // separate the time slots with comma
       } else if(time[i-1] == src_num && time[i] == src_num && time[i+1] != src_num) { // an end
          // printf("end is %d\n", i);
-         sprintf(str, "%d", i); // convert int i into string and store it into var str
+         sprintf(str, "%d", i+1); // convert int i into string and store it into var str
          strcat(intersection, str);
          strcat(intersection, ","); // separate the time slots with comma
       }
    }
    // handle the last element specifically
-   if(time[100] == src_num && time[99] == src_num) {
-      strcat(intersection, "100");
+   char temp[5];
+   if(time[MAXSLOTLEN-1] == src_num && time[MAXSLOTLEN-2] == src_num) {
+      sprintf(temp, "%d", MAXSLOTLEN-1);
+      strcat(intersection, temp);
       strcat(intersection, ","); // separate the time slots with comma
    }
    // remove the comma at the end
-   if(strlen(intersection) != 0) // no intersection
+   if(strlen(intersection) != 0) // have intersection
       intersection[strlen(intersection)-1] = '\0';
+
    // printf("intersection is %s\n", intersection);
-   return intersection;
-}
-
-
-/* timestr: 2,3,5,7,  return value: [[2,3],[5,7]]*/
-char *formatTime(char* timestr) {
-   char timestr_copy[MAXBUFLEN];
-   strcpy(timestr_copy, timestr);
+   
    static char result[MAXBUFLEN];
    memset(result, 0, sizeof(result));
    strcat(result, "[");
    int count = 0;
-   char* token = strtok(timestr_copy, ",");
+   char* token = strtok(intersection, ",");
    while(token != NULL) {
       // printf("token is %s\n", token);
       if(count%2 == 0) { // even position
@@ -359,8 +412,9 @@ char *formatTime(char* timestr) {
       count++;
    }
    if(strlen(result) != 1)
+      // remove a redundant comma at the end
       result[strlen(result)-1] = ']';
-   else // under the scenario with no intersection
+   else // under the scenario with no intersection, only with a '[' at the beginning
       strcat(result, "]");
    // printf("result is %s\n", result);
    return result;

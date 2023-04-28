@@ -76,7 +76,7 @@ int main(){
 		   printf("Client received the reply from Main Server using TCP over port %s:\n%s do not exist.\n", port, group[0]);
 
 		if(strlen(group[1]) != 0)
-		   printf("Client received the reply from Main Server using TCP over port %s:\nTime intervals %s works for %s.\n", port, group[1], group[2]);
+		   printf("Client received the reply from Main Server using TCP over port %s:\nTime intervals %s works for %s.\n", port, group[2], group[1]);
 
 		memset(namestr, MAXBUFLEN, 0); // clear namestr and get ready for the next request
 
