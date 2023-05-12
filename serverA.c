@@ -32,9 +32,12 @@ int *findIntersection(char *usernames, int src_num);
 /*
    parameter time is the final time slots, like 001033330201...(length equals MAXSLOTLEN)
    parameter src_num is the number of users used to calculate the intersection
-   return value:
+   return value: [[4,8],[11,12],...]
 */
 char *displayIntersection(int time[MAXSLOTLEN], int src_num);
+// remove the specified interval from the given recvnames
+// recvnames: aa, bb, cc; selected: [10,12]
+void removeInterval(char *recvnames, char *selected);
 
 int main(){
 	printf("Server A is up and running using UDP on port %d.\n", MYPORT);
@@ -152,6 +155,15 @@ int main(){
 		// intersection form: 0012000333330000...
 		sendto(sockfd, displayres, MAXBUFLEN-1, 0, res->ai_addr, res->ai_addrlen);
 		printf("Server A finished sending the response to Main Server.\n");
+
+		char selected[MAXBUFLEN];
+		memset(selected, 0, MAXBUFLEN * sizeof(char));
+		recvfrom(sockfd, selected, MAXBUFLEN-1, 0, NULL, NULL);
+		if(strcmp(selected, "[]") != 0) {
+		   removeInterval(recvnames, selected);
+	      printf("ServerA finished updating.\n");
+	      sendto(sockfd, "success", 10, 0, res->ai_addr, res->ai_addrlen);
+		}
 	}
 
 	freeaddrinfo(res);
@@ -195,7 +207,7 @@ int *findIntersection(char *usernames, int src_num) {
 /*
    parameter time is the final time slots, like 001033330201...(length equals MAXSLOTLEN)
    parameter src_num is the number of users used to calculate the intersection
-   return value:
+   return value: [[4,8],[11,12],...]
 */
 char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
    static char intersection[MAXBUFLEN];
@@ -267,4 +279,41 @@ char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
       strcat(result, "]");
    // printf("result is %s\n", result);
    return result;
+}
+
+// remove the specified interval from the given recvnames
+// recvnames: aa, bb, cc; selected: [10,12]
+void removeInterval(char *recvnames, char *selected) {
+   printf("Register a meeting at %s and update the availability for the following users:\n", selected);
+   char selected_copy[20];
+   strcpy(selected_copy, selected);
+   char *slot_token = strtok(selected_copy, ",[]");
+   int slots[2]; // store the left and right index of the interval
+   int position = 0; // the position in array slots
+   while(slot_token != NULL) {
+      slots[position] = atoi(slot_token);
+      position++;
+      slot_token = strtok(NULL, ",[]");
+   }
+   int left = slots[0];
+   int right = slots[1];
+   // printf("left is %d, right is %d\n", left, right);
+
+   char recvnames_copy[MAXBUFLEN];
+   strcpy(recvnames_copy, recvnames); 
+   char *name_token = strtok(recvnames_copy, ", ");
+   while(name_token != NULL) {
+      // printf("name_token is %s\n", name_token);
+      for(int i = 0; i < usernum; i++) {
+         char original_interval[MAXBUFLEN];
+         if(strcmp(users[i].username, name_token) == 0) { // get the corresponding user
+            strcpy(original_interval, displayIntersection(users[i].slots, 1));
+            for(int j = left; j < right; j++) {
+               users[i].slots[j] = 0; // decrement the specified interval
+            }
+            printf("%s: updated from %s to %s\n", name_token, original_interval, displayIntersection(users[i].slots, 1));
+         }
+      }
+      name_token = strtok(NULL, ", ");
+   }
 }

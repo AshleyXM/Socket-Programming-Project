@@ -272,6 +272,37 @@ int main(){
 		// send the result to the client
 		send(childsockfd, info2client, MAXBUFLEN-1, 0);
 		printf("Main Server sent the result to the client.\n");
+		
+		if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) { // intersection is not empty
+	   char selected[MAXBUFLEN];
+	   recv(childsockfd, selected, MAXBUFLEN-1, 0);
+	   char status[10];
+	   memset(status, 0, sizeof(char) * 10);
+	   if(strlen(inA) != 0) { // send the selected interval to serverA
+	      sendto(udpsockfd, selected, MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
+         recvfrom(udpsockfd, status, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrA, &addr_lenA);
+         if(strcmp(status, "success") == 0) {
+            printf("ServerA updated successfully.\n");
+         } else {
+            printf("ServerA failed to update.\n");
+         }
+         memset(status, 0, sizeof(char) * 10);
+	   }
+	   if(strlen(inB) != 0) { // send the selected interval to serverB
+	      sendto(udpsockfd, selected, MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
+         recvfrom(udpsockfd, status, 10, 0, (struct sockaddr *)&src_addrB, &addr_lenB);
+         if(strcmp(status, "success") == 0) {
+            printf("ServerB updated successfully.\n");
+         } else {
+            printf("ServerB failed to update.\n");
+         }
+         memset(status, 0, sizeof(char) * 10);
+	   }
+	   send(childsockfd, "success", 10, 0);
+		} else {
+		   sendto(udpsockfd, "[]", MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
+		   sendto(udpsockfd, "[]", MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
+		}
 
 		close(childsockfd);
 	} // end while
