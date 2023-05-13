@@ -11,11 +11,11 @@ When a user wants to schedule a meeting among a group of people, the user will s
 
 Without the loss of generality, we assume there are one client, one main server and two backend servers in our project, as indicated in Figure 1. The full process can be roughly divided into four phases: **Boot-up**, **Forward**, **Schedule**, **Reply** (read details in “Application Workflow Phase Description” section).
 
-● Client: used to access the meeting scheduling system.
-● Main server (serverM): coordinate with the backend servers.
-● Backend server (serverA and serverB): store the availability of all users and get the time slots that work for all meeting participants once receiving requests.
+- Client: used to access the meeting scheduling system.
+- Main server (serverM): coordinate with the backend servers.
+- Backend server (serverA and serverB): store the availability of all users and get the time slots that work for all meeting participants once receiving requests.
 
-# Application Workflow Phase Description:
+# Application Workflow Phase Description
 
 ## Phase 1: Boot-up
 
@@ -50,6 +50,7 @@ In the case of one participant, the backend server can directly send the time av
 In the case of two participants, for example Alice and Bob, the backend server should first search in its database and find the time availability of them. The time availability of Alice and Bob are two lists of time intervals as stated in the “Input Files” section, denoted as
 
 Alice_Time_List=[[t1_start,t1_end],[t2_start,t2_end],...]
+
 Bob_Time_List=[[t1_start,t1_end],[t2_start,t2_end],...]
 
 An algorithm should be developed with Alice_Time_List and Bob_Time_List as the input and output the intersection of time intervals of two lists. An illustration of time intervals and some example inputs and outputs are given in Figure 2, in which the intersection between time intervals [5,10] and [8,11] which is [8,10] are considered as a valid intersection (and the two time lists can have more than one valid intersections). However, the intersection between [15,17] and [17,18] which is [17,17] is **NOT** an intersection in our scenario because the definition of time intervals requires t[i]_start < t[i]_end and t[i]_end < t[i+1]_start as stated in the “Input Files” section.
@@ -61,7 +62,9 @@ Figure 2: Illustration of time intervals and example inputs and outputs
 In the case of more than two participants, you may run the algorithm for two participants iteratively, and each time find the intersection between the previously found intersection result and the time list of a new participant. You can also develop other algorithms that can directly work for multiple users. An example of the whole process is given as follows. A backend server receives the request for the time availability among Alice, Bob and Amy. The backend server first finds in its database the time availability of them obtaining
 
 Alice_Time_List=[[1,10],[11,12]]
+
 Bob_Time_List=[[5,9],[11,15]]
+
 Amy_Time_List=[[4,12]]
 
 An algorithm is then runned to output the intersection result [[5,9],[11,12]].
@@ -73,6 +76,7 @@ At the end of this phase, a backend server should have the intersection result a
 During this phase, the backend servers send the intersection result among all participants to the main server via UDP. Once the main server receives the results, the main server runs the algorithm for two participants developed in Phase 3 to identify the intersection between two intersection results received from two backend servers. For example, the main server receives the following intersection results which are two lists of time intervals from two backends servers
 
 result_1= [[6,7],[10,12],[14,15]]
+
 result_2= [[3,8],[9,15]]
 
 Then the main server should feed these time intervals to your algorithm and have the result [[6,7],[10,12],[14,15]] ready. Then the main server sends the intersection result which is a list of time intervals back to the client via TCP.
@@ -80,7 +84,9 @@ Then the main server should feed these time intervals to your algorithm and have
 When the client receives the result, it will print out the result and the prompt messages for a new request as follows:
 
 *Time intervals <[time intervals]> works for <username1, username2, …>.*
+
 *-----Start a new request-----*
+
 *Please enter the usernames to check schedule availability:*
 
 All servers and the client are required to print out on-screen messages after executing each action as described in the “ON-SCREEN MESSAGES" section.
@@ -102,14 +108,19 @@ This entered time interval must be one of the intervals in the recommendations. 
 If it is valid, the client should pass the interval to the main server and the main server passes it to the corresponding backend server based on the entered username in Phase 1. The backend servers then remove this time interval from the involved users time availability list, indicating that this time slot is occupied by a meeting. For example, the original availability of a user is [[1,5],[7,8]]. After registering [1,2] as a meeting time, the availability in the database becomes [[2,5],[7,8]]. The backend server should print the on-screen messages showing the updates:
 
 *Register a meeting at \<time slot\> and update the availability for the following users:*
+
 *<username 1>: updated from \<original time availability list\> to \<updated time availability list\>*
+
 *<username 2>: updated from \<original time availability list\> to \<updated time availability list\>*
+
 *…*
 
 For example:
 
 *Register a meeting at [1,2] and update the availability for the following users:*
+
 *Alice: updated from [[1,2],[7,10]] to [[7,10]]*
+
 *Bob: updated from [[1,5],[7,8]] to [[2,5],[7,8]]*
 
 After updating, the backend server sends a message to the main server indicating that the update is finished. And the main server will notify the client so that the client can start a new request.
