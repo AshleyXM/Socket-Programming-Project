@@ -128,8 +128,6 @@ After updating, the backend server sends a message to the main server indicating
 # Illustration of the system
 ![image](https://user-images.githubusercontent.com/60614853/233798991-2c4fcc2b-4804-4444-88bd-9c7f434721e5.png)
 
-
-
 # Problem Analysis
 
 Based on the problem statement, we can conclude that for the basic part, firstly, the client sends a message to the main server via TCP, and then the main server requests server A and/or server B via UDP. After that, server A and/or server B reply to the main server via UDP, and then the main server replies to the client via TCP. And for the extra credits part, the client replies to the main server with a selected time interval via TCP, and then the main server sends it to server A and/or serve B. After that, server A and/or server B update their database and notify the main server, and then the main server notify the client that the databases have been updated successfully. The flow chart can be drawn as follow:
@@ -140,16 +138,31 @@ Based on the problem statement, we can conclude that for the basic part, firstly
 
 # Clarification
 
+The tag **v1.0** is implemented based on the basic requirement, and the tag **v2.0** is implemented based on the extra credit part.
 
+Note: All the code in this project only cares about the functions, but pays no attention to the exception aspect, which means that, I have made no effort to check invalid inputs, or in other words, there is no exception checking mechanism in this project.
 
 # How to compile and run
 
 ![image](https://user-images.githubusercontent.com/60614853/233798970-7212a547-ad55-41a2-af60-be2e156a3799.png)
 
+**Note:** The launching order must be like this: serverM -> serverA -> serverB -> client. And you want to stop the processes, I would recommend to kill the processes in the reverse order (that is, client -> serverB -> serverA -> serverM), otherwise, you might get into some unexpected port-related problems.
+
 # Screenshots
 
 
 
-
-
 # Gains
+
+1. I got to know the relationship between several important functions in **socket network**. I have drawn some figures shown as below based on my understanding:
+
+   
+
+2. We must be really careful when we use **pointers**. As it is easy for us to forget the fact that a pointer points to a variable and when you update the value via pointers, the pointed variable will alter at the same time, which is unexpected. For example, as for the function **strtok**, the first parameter is a pointer, so when you are going to split the first parameter by function strtok, it will alter the original variable.
+
+3. When we are writing a program which can keep running and accepting inputs, **be careful to reset the global variables**. Never reset the variables which do not need to reset!
+
+4. For every program, the **edge values** are always the most vulnerable part. So it is a good way for programmers to write multiple test cases to test the edge values.
+
+5. I learnt how to write **Makefile** for C programs, which is essential and helpful took when we write large C programs.
+
