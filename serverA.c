@@ -162,8 +162,8 @@ int main(){
 		if(strcmp(selected, "[]") != 0) {
 		   removeInterval(recvnames, selected);
 	      printf("ServerA finished updating.\n");
-	      sendto(sockfd, "success", 10, 0, res->ai_addr, res->ai_addrlen);
 		}
+      sendto(sockfd, "success", 10, 0, res->ai_addr, res->ai_addrlen);
 	}
 
 	freeaddrinfo(res);
@@ -300,20 +300,28 @@ void removeInterval(char *recvnames, char *selected) {
    // printf("left is %d, right is %d\n", left, right);
 
    char recvnames_copy[MAXBUFLEN];
-   strcpy(recvnames_copy, recvnames); 
+   strcpy(recvnames_copy, recvnames);
+   char names[50][30]; // store all the received names 
+   memset(names, 0, 50 * 30 * sizeof(char));
+   int num = 0; // the number of received names
    char *name_token = strtok(recvnames_copy, ", ");
    while(name_token != NULL) {
-      // printf("name_token is %s\n", name_token);
-      for(int i = 0; i < usernum; i++) {
+      strcpy(names[num], name_token);
+      name_token = strtok(NULL, ", ");
+      num++;
+   }
+
+   for(int i = 0; i < num; i++) {
+      for(int j = 0; j < usernum; j++) { // iterate all the users in serverA
          char original_interval[MAXBUFLEN];
-         if(strcmp(users[i].username, name_token) == 0) { // get the corresponding user
-            strcpy(original_interval, displayIntersection(users[i].slots, 1));
-            for(int j = left; j < right; j++) {
-               users[i].slots[j] = 0; // decrement the specified interval
+         if(strcmp(users[j].username, names[i]) == 0) { // get the corresponding user
+            strcpy(original_interval, displayIntersection(users[j].slots, 1));
+            for(int k = left; k < right; k++) {
+               users[j].slots[k] = 0; // decrement the specified interval
             }
-            printf("%s: updated from %s to %s\n", name_token, original_interval, displayIntersection(users[i].slots, 1));
+            printf("%s: updated from %s to %s\n", names[i], original_interval, displayIntersection(users[j].slots, 1));
+            break;
          }
       }
-      name_token = strtok(NULL, ", ");
    }
 }
