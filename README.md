@@ -132,9 +132,9 @@ After updating, the backend server sends a message to the main server indicating
 
 Based on the problem statement, we can conclude that for the basic part, firstly, the client sends a message to the main server via TCP, and then the main server requests server A and/or server B via UDP. After that, server A and/or server B reply to the main server via UDP, and then the main server replies to the client via TCP. And for the extra credits part, the client replies to the main server with a selected time interval via TCP, and then the main server sends it to server A and/or serve B. After that, server A and/or server B update their database and notify the main server, and then the main server notify the client that the databases have been updated successfully. The flow chart can be drawn as follow:
 
-![image-20230512090755554](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/image-20230512090755554.png)
+![basic_part_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/basic_part_flow_chart.png)
 
-![image-20230512091233955](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/image-20230512091233955.png)
+![extra_credit_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/extra_credit_flow_chart.png)
 
 # Clarification
 
@@ -146,7 +146,7 @@ Note: All the code in this project only cares about the functions, but pays no a
 
 ![image](https://user-images.githubusercontent.com/60614853/233798970-7212a547-ad55-41a2-af60-be2e156a3799.png)
 
-**Note:** The launching order must be like this: serverM -> serverA -> serverB -> client. And you want to stop the processes, I would recommend to kill the processes in the reverse order (that is, client -> serverB -> serverA -> serverM), otherwise, you might get into some unexpected port-related problems.
+**Note:** The launching order must be like this: serverM -> serverA -> serverB -> client. And when you want to stop the processes, I would recommend to kill the processes in the reverse order (that is, client -> serverB -> serverA -> serverM), otherwise, you might get into some unexpected port-related problems.
 
 # Screenshots
 
@@ -156,7 +156,7 @@ Note: All the code in this project only cares about the functions, but pays no a
 
 1. I got to know the relationship between several important functions in **socket network**. I have drawn some figures shown as below based on my understanding:
 
-   
+   ![UDP_connection_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/UDP_connection_flow_chart.png)
 
 2. We must be really careful when we use **pointers**. As it is easy for us to forget the fact that a pointer points to a variable and when you update the value via pointers, the pointed variable will alter at the same time, which is unexpected. For example, as for the function **strtok**, the first parameter is a pointer, so when you are going to split the first parameter by function strtok, it will alter the original variable.
 
