@@ -105,9 +105,9 @@ int main(){
          }
          send(sockfd, selectedslot, MAXBUFLEN-1, 0);
          char status[10];
-         recv(sockfd, status, 9, 0);
+         /*recv(sockfd, status, 10, 0);
          if(strcmp(status, "success") == 0)
-		      printf("All servers updated successfully.\n");
+		      printf("All servers updated successfully.\n");*/
       }
 
 		memset(namestr, MAXBUFLEN, 0); // clear namestr and get ready for the next request

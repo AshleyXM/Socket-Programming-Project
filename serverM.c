@@ -305,11 +305,10 @@ int main(){
          memset(status, 0, sizeof(char) * 10);
 	   }
 
-      if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) {
+      /*if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) {
          printf("send return value: %d\n", send(childsockfd, "success", 10, 0));
-         printf("send status success!\n");  
-      }
-      printf("okkkk\n");
+         printf("%s\n", strerror(errno));
+      }*/
 
 		close(childsockfd);
 	} // end while
