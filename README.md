@@ -157,12 +157,18 @@ The tag **v1.0** is implemented based on the basic requirement, and the tag **v2
 **Example:**
 
 Input:
-maya luis khloe jameson
-[11,12]
-cole luis silas johnson
-emerson cole
-[4,5]
-[5,7]
+
+*maya luis khloe jameson*
+
+*[11,12]*
+
+*cole luis silas johnson*
+
+*emerson cole*
+
+*[4,5]*
+
+*[5,7]*
 
 Output:
 
@@ -173,6 +179,8 @@ Output:
 1. I got to know the relationship between several important functions in **socket network**. I have drawn some figures shown as below based on my understanding:
 
    ![UDP_connection_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/UDP_connection_flow_chart.png)
+
+   ![TCP_connection_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/TCP_connection_flow_chart.png)
 
 2. We must be really careful when we use **pointers**. As it is easy for us to forget the fact that a pointer points to a variable and when you update the value via pointers, the pointed variable will alter at the same time, which is unexpected. For example, as for the function **strtok**, the first parameter is a pointer, so when you are going to split the first parameter by function strtok, it will alter the original variable.
 
