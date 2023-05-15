@@ -55,7 +55,9 @@ Bob_Time_List=[[t1_start,t1_end],[t2_start,t2_end],...]
 
 An algorithm should be developed with Alice_Time_List and Bob_Time_List as the input and output the intersection of time intervals of two lists. An illustration of time intervals and some example inputs and outputs are given in Figure 2, in which the intersection between time intervals [5,10] and [8,11] which is [8,10] are considered as a valid intersection (and the two time lists can have more than one valid intersections). However, the intersection between [15,17] and [17,18] which is [17,17] is **NOT** an intersection in our scenario because the definition of time intervals requires t[i]_start < t[i]_end and t[i]_end < t[i+1]_start as stated in the “Input Files” section.
 
-![image-20230512000948943](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/image-20230512000948943.png)
+![interval_example](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/interval_example.png)
+
+![input_output_examples](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/input_output_examples.png)
 
 Figure 2: Illustration of time intervals and example inputs and outputs
 
@@ -140,7 +142,7 @@ Based on the problem statement, we can conclude that for the basic part, firstly
 
 The tag **v1.0** is implemented based on the basic requirement, and the tag **v2.0** is implemented based on the extra credit part.
 
-Note: All the code in this project only cares about the functions, but pays no attention to the exception aspect, which means that, I have made no effort to check invalid inputs, or in other words, there is no exception checking mechanism in this project.
+**Note:** All the code in this project only cares about the functions, but pays no attention to the exception aspect, which means that, I have made no effort to check invalid inputs, or in other words, there is no exception checking mechanism in this project.
 
 # How to compile and run
 
