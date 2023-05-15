@@ -158,6 +158,8 @@ The tag **v1.0** is implemented based on the basic requirement, and the tag **v2
 
    ![UDP_connection_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/UDP_connection_flow_chart.png)
 
+   ![TCP_connection_flow_chart](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/TCP_connection_flow_chart.png)
+
 2. We must be really careful when we use **pointers**. As it is easy for us to forget the fact that a pointer points to a variable and when you update the value via pointers, the pointed variable will alter at the same time, which is unexpected. For example, as for the function **strtok**, the first parameter is a pointer, so when you are going to split the first parameter by function strtok, it will alter the original variable.
 
 3. When we are writing a program which can keep running and accepting inputs, **be careful to reset the global variables**. Never reset the variables which do not need to reset!
@@ -165,6 +167,4 @@ The tag **v1.0** is implemented based on the basic requirement, and the tag **v2
 4. For every program, the **edge values** are always the most vulnerable part. So it is a good way for programmers to write multiple test cases to test the edge values.
 
 5. I learnt how to write **Makefile** for C programs, which is essential and helpful took when we write large C programs.
-
-6. There is one point which is worth paying a lot of attention to, which is a lasting problem which confused me for a long time. When peers are communicating with each other with TCP connection, it is weird that the return value of function send from server side is -1, and the error code is "**Connection reset by peer**". I have searched it on Google, there are several possible reasons: It has been a long time to have this TCP connection (which can be excluded in my case because it appeared at the same position); or the other side, say the client in my case, has closed the socket before the function send, which can also excluded in my case. And I suppose it is because the buffer of the TCP connection has overflowed (but I am not sure, just an inference). So I solved this issue by establishing a new TCP connection to send the status code between the client and the serverM.
 
