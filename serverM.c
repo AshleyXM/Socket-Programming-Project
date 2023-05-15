@@ -92,10 +92,10 @@ int main(){
 	struct sockaddr_in src_addr;
 	socklen_t addr_len = sizeof(src_addr);
 
-	for(int i = 0; i < 2; i++){
+	for(int i = 0; i < 2; i++) {
 		memset(recvstr, 0, sizeof(recvstr)); // clear recvstr
 		recvfrom(udpsockfd, recvstr, MAXBUFLEN-1, 0,
-			(struct sockaddr *)&src_addr, &addr_len); // receive msg via udpsockfd
+			      (struct sockaddr *)&src_addr, &addr_len); // receive msg via udpsockfd
 
 		// parse recvdata
 		int count = 0;
@@ -121,8 +121,8 @@ int main(){
 	
 
 	while(1) {
-	   // TCP connection can only be used one time, which is quite different from UDP
-	   childsockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
+		// TCP connection can only be used one time, which is quite different from UDP
+		childsockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
 		char clientstr[MAXBUFLEN];
 		// printf("client port is %d\n", ntohs(client_addr.sin_port));
 		// lsof -i | grep 38582  -> check the process of specified port number
@@ -142,14 +142,14 @@ int main(){
 		while(token != NULL){
 			strcpy(inputusers[count], token);
 			if(nameInServer('A', token) == 0 && nameInServer('B', token) == 0){
-			   strcat(notexist, token);
-			   strcat(notexist, ", ");
+				strcat(notexist, token);
+				strcat(notexist, ", ");
 			} else if (nameInServer('A', token)) {
-			   strcat(inA, token);
-			   strcat(inA, ", ");
+				strcat(inA, token);
+				strcat(inA, ", ");
 			} else {
-			   strcat(inB, token);
-			   strcat(inB, ", ");
+				strcat(inB, token);
+				strcat(inB, ", ");
 			}
 			token = strtok(NULL, " ");
 			count++;
@@ -184,7 +184,8 @@ int main(){
 			// query serverA, inA form: aa, bb, cc, dd
 			sendto(udpsockfd, inA, MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
 			// receive response from serverA
-			recvfrom(udpsockfd, recvfromA, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrA, &addr_lenA);
+			recvfrom(udpsockfd, recvfromA, MAXBUFLEN-1, 0,
+			         (struct sockaddr *)&src_addrA, &addr_lenA);
 		}
 
 		if(strlen(inB) != 0) {
@@ -192,7 +193,8 @@ int main(){
 			// query serverB
 			sendto(udpsockfd, inB, MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
 			// receive response from serverB
-			recvfrom(udpsockfd, recvfromB, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrB, &addr_lenB);
+			recvfrom(udpsockfd, recvfromB, MAXBUFLEN-1, 0,
+			         (struct sockaddr *)&src_addrB, &addr_lenB);
 		}
 
 		if(strlen(inA) != 0)
@@ -200,33 +202,33 @@ int main(){
 		if(strlen(inB) != 0)
 			printf("Main Server received from server B the intersection result using UDP over port %d:\n%s.\n", UDPPORT, recvfromB);
 
-      int intersectionA[MAXSLOTLEN];
-      int intersectionB[MAXSLOTLEN];  
+		int intersectionA[MAXSLOTLEN];
+		int intersectionB[MAXSLOTLEN];  
 		memcpy(intersectionA, convertTime(recvfromA), MAXSLOTLEN * sizeof(int));
 		memcpy(intersectionB, convertTime(recvfromB), MAXSLOTLEN * sizeof(int));
 
 		int intersection[MAXSLOTLEN];
 		memset(intersection, 0, sizeof(intersection));
 
-      for(int i = 0; i < MAXSLOTLEN; i++) {
-         intersection[i] = intersectionA[i] + intersectionB[i];
-      }
+ 		for(int i = 0; i < MAXSLOTLEN; i++) {
+ 			intersection[i] = intersectionA[i] + intersectionB[i];
+ 		}
 
-      int srcNum = 0; // data from ServerA or ServerB or both or none
-      if(strlen(inA) != 0 && strlen(inB) != 0)
-         srcNum = 2;
-      else if(strlen(inA) == 0 || strlen(inB) == 0)
-         srcNum = 1;
-      else // all names do not exist in serverA or serverB
-         srcNum = -1;
-      printf("Found the intersection between the results from server A and B:\n%s.\n", displayIntersection(intersection, srcNum));
+ 		int srcNum = 0; // data from ServerA or ServerB or both or none
+ 		if(strlen(inA) != 0 && strlen(inB) != 0)
+			srcNum = 2;
+ 		else if(strlen(inA) == 0 || strlen(inB) == 0)
+ 			srcNum = 1;
+	 	else // all names do not exist in serverA or serverB
+			srcNum = -1;
+		printf("Found the intersection between the results from server A and B:\n%s.\n", displayIntersection(intersection, srcNum));
 
 		if(strlen(inA) != 0) {
 			strcat(info2client, inA);			
 		}
 		if(strlen(inB) != 0) {
-		   if(strlen(inA) != 0) // some names come from serverA
-		      strcat(info2client, ", ");
+			if(strlen(inA) != 0) // some names come from serverA
+				strcat(info2client, ", ");
 			strcat(info2client, inB);
 		}
 		strcat(info2client, ";");
@@ -235,8 +237,8 @@ int main(){
 		char temp[5];
 		memset(intersectionstr, 0, sizeof(intersectionstr));
 		for(int i = 0; i < MAXSLOTLEN; i++) {
-		   sprintf(temp, "%d", intersection[i]);
-		   strcat(intersectionstr, temp);
+			sprintf(temp, "%d", intersection[i]);
+			strcat(intersectionstr, temp);
 		}
 
 		strcat(info2client, displayIntersection(intersection, srcNum));
@@ -245,69 +247,71 @@ int main(){
 		send(childsockfd, info2client, MAXBUFLEN-1, 0);
 		printf("Main Server sent the result to the client.\n");
 		
-	   char selected[MAXBUFLEN];
-	   recv(childsockfd, selected, MAXBUFLEN-1, 0);
-	   char status[10];
-	   memset(status, 0, sizeof(char) * 10);
-	   if(strlen(inA) != 0) { // send the selected interval to serverA
-	      if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0)
-   	      sendto(udpsockfd, selected, MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
-   	   else // intersection is empty
-   	      sendto(udpsockfd, "[]", MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
-         recvfrom(udpsockfd, status, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrA, &addr_lenA);
-         if(strcmp(status, "success") == 0) {
-            printf("ServerA updated successfully.\n");
-         } else {
-            printf("ServerA failed to update.\n");
-         }
-         memset(status, 0, sizeof(char) * 10);
-	   }
+		char selected[MAXBUFLEN];
+		recv(childsockfd, selected, MAXBUFLEN-1, 0);
+		char status[10];
+		memset(status, 0, sizeof(char) * 10);
+		if(strlen(inA) != 0) { // send the selected interval to serverA
+ 			if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0)
+				sendto(udpsockfd, selected, MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
+			else // intersection is empty
+				sendto(udpsockfd, "[]", MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
 
-	   if(strlen(inB) != 0) { // send the selected interval to serverB
-   	   if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0)
-	         sendto(udpsockfd, selected, MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
-	      else
-	         sendto(udpsockfd, "[]", MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
-         recvfrom(udpsockfd, status, 10, 0, (struct sockaddr *)&src_addrB, &addr_lenB);
-         if(strcmp(status, "success") == 0) {
-            printf("ServerB updated successfully.\n");
-         } else {
-            printf("ServerB failed to update.\n");
-         }
-         memset(status, 0, sizeof(char) * 10);
-	   }
+			recvfrom(udpsockfd, status, 9, 0, (struct sockaddr *)&src_addrA, &addr_lenA);
+
+			if(strcmp(status, "success") == 0)
+				printf("ServerA updated successfully.\n");
+			else
+				printf("ServerA failed to update.\n");
+
+			memset(status, 0, sizeof(char) * 10);
+		}
+
+		if(strlen(inB) != 0) { // send the selected interval to serverB
+			if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0)
+				sendto(udpsockfd, selected, MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
+			else
+				sendto(udpsockfd, "[]", MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
+
+			recvfrom(udpsockfd, status, 9, 0, (struct sockaddr *)&src_addrB, &addr_lenB);
+
+			if(strcmp(status, "success") == 0) {
+				printf("ServerB updated successfully.\n");
+ 			} else {
+				printf("ServerB failed to update.\n");
+			}
+			memset(status, 0, sizeof(char) * 10);
+		}
 	   
-	   close(childsockfd);
+		close(childsockfd);
 
-      if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) {
-         child2sockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
-         send(child2sockfd, "success", 7, 0);
-         close(child2sockfd);
-      }
+		if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) {
+ 			child2sockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
+			send(child2sockfd, "success", 7, 0);
+			close(child2sockfd);
+		}
 		
 	} // end while
 
-   close(tcpsockfd);
-   close(udpsockfd);
+	close(tcpsockfd);
+	close(udpsockfd);
 	return 0;
 }
 
 int nameInServer(char c, char* name){ // c == 'A'/'B'
-   if(c == 'A'){
-      for(int i = 0; i < sizeA; i++) {
-         if(strcmp(usersA[i], name) == 0) {
-            return 1;
-         }
-      }
+	if(c == 'A') {
+ 		for(int i = 0; i < sizeA; i++) {
+ 			if(strcmp(usersA[i], name) == 0)
+				return 1;
+		}
+	return 0;
+	} else { // c == 'B'
+ 		for(int i = 0; i < sizeB; i++) {
+			if(strcmp(usersB[i], name) == 0)
+				return 1;
+		}
       return 0;
-   } else { // c == 'B'
-      for(int i = 0; i < sizeB; i++) {
-         if(strcmp(usersB[i], name) == 0) {
-            return 1;
-         }
-      }
-      return 0;
-   }
+	}
 }
 
 /*
