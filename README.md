@@ -55,11 +55,9 @@ Bob_Time_List=[[t1_start,t1_end],[t2_start,t2_end],...]
 
 An algorithm should be developed with Alice_Time_List and Bob_Time_List as the input and output the intersection of time intervals of two lists. An illustration of time intervals and some example inputs and outputs are given in Figure 2, in which the intersection between time intervals [5,10] and [8,11] which is [8,10] are considered as a valid intersection (and the two time lists can have more than one valid intersections). However, the intersection between [15,17] and [17,18] which is [17,17] is **NOT** an intersection in our scenario because the definition of time intervals requires t[i]_start < t[i]_end and t[i]_end < t[i+1]_start as stated in the “Input Files” section.
 
-![interval_example](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/interval_example.png)
+![time_interval_examples](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/time_interval_examples.png)
 
-![input_output_examples](https://github.com/AshleyXM/Socket-Programming-Project/blob/main/images/input_output_examples.png)
-
-Figure 2: Illustration of time intervals and example inputs and outputs
+Figure: Illustration of time intervals and example inputs and outputs
 
 In the case of more than two participants, you may run the algorithm for two participants iteratively, and each time find the intersection between the previously found intersection result and the time list of a new participant. You can also develop other algorithms that can directly work for multiple users. An example of the whole process is given as follows. A backend server receives the request for the time availability among Alice, Bob and Amy. The backend server first finds in its database the time availability of them obtaining
 
