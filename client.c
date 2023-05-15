@@ -31,6 +31,7 @@ int main(){
 	printf("Please enter the usernames to check schedule availability:\n");
 	char namestr[MAXBUFLEN];
 	int sockfd;
+	int sock2fd;
 	struct addrinfo hints;
 	struct addrinfo *res, *p;
 	memset(&hints, 0, sizeof(hints));
@@ -52,7 +53,6 @@ int main(){
 
 		char recvstr[MAXBUFLEN] = {0}; // received string from the main server
 		recv(sockfd, recvstr, MAXBUFLEN-1, 0);
-		// printf("recvstr is %s\n", recvstr);
 
 		// deal with the info sent from the main server
 		/* names that do not exist
@@ -77,12 +77,6 @@ int main(){
 	      i++;
 		}
 
-      /*
-		for(int i = 0; i < 3; i++){
-		   printf("group[%d] is %s\n", i, group[i]);
-		}
-      */
-
 		if(strlen(group[0]) != 0)
 		   printf("Client received the reply from Main Server using TCP over port %s:\n%s do not exist.\n", port, group[0]);
 
@@ -104,18 +98,26 @@ int main(){
                break;
          }
          send(sockfd, selectedslot, MAXBUFLEN-1, 0);
+         close(sockfd);
+
+         sock2fd = socket(AF_INET, SOCK_STREAM, 0); // get fd
+         // establish connection
+         connect(sock2fd, res->ai_addr, res->ai_addrlen);
+
          char status[10];
-         /*recv(sockfd, status, 10, 0);
+         recv(sock2fd, status, 9, 0);
          if(strcmp(status, "success") == 0)
-		      printf("All servers updated successfully.\n");*/
+		      printf("All servers updated successfully.\n");
+
+		   close(sock2fd);
+      } else {
+         close(sockfd);
       }
 
 		memset(namestr, MAXBUFLEN, 0); // clear namestr and get ready for the next request
 
 		printf("-----Start a new request-----\n");
 		printf("Please enter the usernames to check schedule availability:\n");
-
-		close(sockfd);
 	}
 
 	return 0;

@@ -46,6 +46,7 @@ int main(){
 	int udpsockfd;
 	int tcpsockfd;
 	int childsockfd; // child socket
+	int child2sockfd;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -95,15 +96,11 @@ int main(){
 		memset(recvstr, 0, sizeof(recvstr)); // clear recvstr
 		recvfrom(udpsockfd, recvstr, MAXBUFLEN-1, 0,
 			(struct sockaddr *)&src_addr, &addr_len); // receive msg via udpsockfd
-		// printf("recvstr is %s\n",recvstr);
-		//printf("src_addr is %s, port is %d\n", inet_ntoa(src_addr.sin_addr),
-      //      ntohs(src_addr.sin_port));
 
 		// parse recvdata
 		int count = 0;
 		char *token = strtok(recvstr, " "); // split the content by whitespace
 		while(token != NULL) {
-		// printf("current token is %s\n", token);
 			if(ntohs(src_addr.sin_port) == atoi(SERVERAPORT)) { // receiced from serverA
 				strcpy(usersA[sizeA], token);
 				sizeA++;
@@ -135,7 +132,7 @@ int main(){
 		recv(childsockfd, clientstr, MAXBUFLEN-1, 0); // receive names info from the client
 		clientstr[strlen(clientstr)-1] = '\0'; // remove the '\n' symbol at the end
 		printf("Main Server received the request from the client using TCP over port %d.\n", TCPPORT);
-		// printf("serverM has received string from client: %s\n", clientstr);
+
 		char inputusers[10][25];
 		char notexist[MAXBUFLEN] = {0}; // send to the client
 		char inA[MAXBUFLEN] = {0}; // send to serverA: name1, name2, name3,
@@ -144,7 +141,6 @@ int main(){
 		char *token = strtok(clientstr, " "); // split the content by whitespace
 		while(token != NULL){
 			strcpy(inputusers[count], token);
-			//printf("token is %s, its length is %d\n", token, strlen(token));
 			if(nameInServer('A', token) == 0 && nameInServer('B', token) == 0){
 			   strcat(notexist, token);
 			   strcat(notexist, ", ");
@@ -163,12 +159,6 @@ int main(){
 		notexist[strlen(notexist)-2] = '\0';
 		inA[strlen(inA)-2] = '\0';
 		inB[strlen(inB)-2] = '\0';
-
-		/*
-		printf("notexist: %s\n", notexist);
-		printf("inA: %s\n", inA);
-		printf("inB: %s\n", inB);
-		*/
 
 		/* names that do not exist; // if its len equals 0, means all exist
 		   names that exist;
@@ -195,7 +185,6 @@ int main(){
 			sendto(udpsockfd, inA, MAXBUFLEN-1, 0, resA->ai_addr, resA->ai_addrlen);
 			// receive response from serverA
 			recvfrom(udpsockfd, recvfromA, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrA, &addr_lenA);
-			// printf("recvstr from A is %s\n", recvfromA);
 		}
 
 		if(strlen(inB) != 0) {
@@ -204,7 +193,6 @@ int main(){
 			sendto(udpsockfd, inB, MAXBUFLEN-1, 0, resB->ai_addr, resB->ai_addrlen);
 			// receive response from serverB
 			recvfrom(udpsockfd, recvfromB, MAXBUFLEN-1, 0, (struct sockaddr *)&src_addrB, &addr_lenB);
-			// printf("recvstr from B is %s\n", recvfromB);
 		}
 
 		if(strlen(inA) != 0)
@@ -216,20 +204,6 @@ int main(){
       int intersectionB[MAXSLOTLEN];  
 		memcpy(intersectionA, convertTime(recvfromA), MAXSLOTLEN * sizeof(int));
 		memcpy(intersectionB, convertTime(recvfromB), MAXSLOTLEN * sizeof(int));
-		
-		/*
-      printf("intersectionA is ");
-      for(int i = 0; i < MAXSLOTLEN; i++) {
-         printf("%d ", intersectionA[i]);
-      }
-      printf("\n");
-      
-      printf("intersectionB is ");
-      for(int i = 0; i < MAXSLOTLEN; i++) {
-         printf("%d ", intersectionB[i]);
-      }
-      printf("\n");
-      */
 
 		int intersection[MAXSLOTLEN];
 		memset(intersection, 0, sizeof(intersection));
@@ -264,10 +238,8 @@ int main(){
 		   sprintf(temp, "%d", intersection[i]);
 		   strcat(intersectionstr, temp);
 		}
-		// printf("intersectionstr is %s\n", intersectionstr);
-		strcat(info2client, displayIntersection(intersection, srcNum));
 
-		// printf("info2client is %s\n", info2client);
+		strcat(info2client, displayIntersection(intersection, srcNum));
 
 		// send the result to the client
 		send(childsockfd, info2client, MAXBUFLEN-1, 0);
@@ -304,13 +276,15 @@ int main(){
          }
          memset(status, 0, sizeof(char) * 10);
 	   }
+	   
+	   close(childsockfd);
 
-      /*if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) {
-         printf("send return value: %d\n", send(childsockfd, "success", 10, 0));
-         printf("%s\n", strerror(errno));
-      }*/
-
-		close(childsockfd);
+      if(strcmp(displayIntersection(intersection, srcNum), "[]") != 0) {
+         child2sockfd = accept(tcpsockfd, (struct sockaddr *)&client_addr, &client_addr_len);
+         send(child2sockfd, "success", 7, 0);
+         close(child2sockfd);
+      }
+		
 	} // end while
 
    close(tcpsockfd);
@@ -321,7 +295,6 @@ int main(){
 int nameInServer(char c, char* name){ // c == 'A'/'B'
    if(c == 'A'){
       for(int i = 0; i < sizeA; i++) {
-         // printf("userA[i] is %s, its length is %d\n", usersA[i], strlen(usersA[i]));
          if(strcmp(usersA[i], name) == 0) {
             return 1;
          }
@@ -356,26 +329,11 @@ int *convertTime(char *recvdata) {
       token = strtok(NULL, ",[]");
    }
 
-   /*
-   // print the array slots
-   printf("slots in func convertTime: ");
-   for(int i = 0; i < position; i++)
-      printf("%d ", slots[i]);
-   printf("\n");
-   */
    for(int i = 0; i < position; i += 2) {
       for(int j = slots[i]; j <= slots[i+1]-1; j++) {
          converted[j] = 1;
       }
    }
-
-   /*
-   // print the array time
-   printf("converted in func convertTime: ");
-   for(int i = 0; i < MAXSLOTLEN; i++)
-      printf("%d ", converted[i]);
-   printf("\n");
-   */
    
    return converted;
 }
@@ -405,12 +363,10 @@ char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
          strcat(intersection, ",");
       }
       else if(time[i-1] != src_num && time[i] == src_num) { // a start
-         // printf("start is %d\n", i);
          sprintf(str, "%d", i); // convert int i into string and store it into var str
          strcat(intersection, str);
          strcat(intersection, ","); // separate the time slots with comma
       } else if(time[i-1] == src_num && time[i] == src_num && time[i+1] != src_num) { // an end
-         // printf("end is %d\n", i);
          sprintf(str, "%d", i+1); // convert int i into string and store it into var str
          strcat(intersection, str);
          strcat(intersection, ","); // separate the time slots with comma
@@ -426,8 +382,6 @@ char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
    // remove the comma at the end
    if(strlen(intersection) != 0) // have intersection
       intersection[strlen(intersection)-1] = '\0';
-
-   // printf("intersection is %s\n", intersection);
    
    static char result[MAXBUFLEN];
    memset(result, 0, sizeof(result));
@@ -435,7 +389,6 @@ char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
    int count = 0;
    char* token = strtok(intersection, ",");
    while(token != NULL) {
-      // printf("token is %s\n", token);
       if(count%2 == 0) { // even position
          strcat(result, "[");
          strcat(result, token);
@@ -444,7 +397,6 @@ char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
          strcat(result, token);
          strcat(result, "],");
       }
-      // printf("result is %s\n", result);
       token = strtok(NULL, ",");
       count++;
    }
@@ -453,6 +405,5 @@ char *displayIntersection(int time[MAXSLOTLEN], int src_num) {
       result[strlen(result)-1] = ']';
    else // under the scenario with no intersection, only with a '[' at the beginning
       strcat(result, "]");
-   // printf("result is %s\n", result);
    return result;
 }
